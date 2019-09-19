@@ -32,6 +32,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
 
     best_agent = agent
     previous_best_score = -np.Inf
+    best_ever = -np.Inf
 
     for i in range(1, n_episodes + 1):
         env_info = env.reset(train_mode=True)[brain_name]
@@ -53,13 +54,17 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             scores += rewards
             if np.any(dones):
                 break
-        score_window.append(np.mean(scores))
-        mean_scores.append(np.mean(scores))
+
+        mean_score = np.mean(scores)
+        score_window.append(mean_score)
+        mean_scores.append(mean_score)
 
         best_score = np.max(scores)
+        if best_score > best_ever:
+            best_ever = best_score
 
         print(
-            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (best {best_score:.2f}, scale {noise_scale:.3f})",
+            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (best {best_score:.2f} [ever {best_ever:.2f}], mean {mean_score:.2f}, scale {noise_scale:.3f})",
             end="\n" if i % 100 == 0 else "")
         if len(score_window) >= 100 and np.mean(score_window) > threshold:
             print(f"\nEnvironment solved in {i} episodes.")
