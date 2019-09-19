@@ -43,18 +43,16 @@ def run(env, agent, n_episodes):
 @click.command()
 @click.option('--environment', required=True,
               help="Path to Unity environment", type=click.Path())
-@click.option('--layer1', default=32, help="Number of units in input layer")
-@click.option('--layer2', default=32, help="Number of units in hidden layer")
+@click.option('--layer1', default=16, help="Number of units in hidden layer")
 @click.option('--n-episodes', default=3, help="Number of episodes to run")
 @click.option('--weights-input', default='weights.pth', help="Network weights",
               type=click.Path())
-def main(environment, layer1, layer2, n_episodes, weights_input):
+def main(environment, layer1, n_episodes, weights_input):
     env = UnityEnvironment(file_name=environment)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    agent = Agent(state_size=37, action_size=4, device=device, layer1=layer1,
-                  layer2=layer2)
-    agent.load_weights(weights_input)
+    agent = Agent(state_size=33, action_size=4, device=device, layer1=layer1)
+    # agent.load_weights(weights_input)
 
     run(env, agent, n_episodes)
 
