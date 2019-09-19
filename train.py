@@ -10,7 +10,7 @@ from unityagents import UnityEnvironment
 from agent import Agent
 
 
-def train(env, agent, weight_path, n_episodes=200, threshold=30.0):
+def train(env, agent, weight_path, n_episodes=1000, threshold=30.0, noise_scale=0.02):
     """Train agent and store weights if successful.
 
     Args:
@@ -20,6 +20,7 @@ def train(env, agent, weight_path, n_episodes=200, threshold=30.0):
         n_episodes (int): Max number of episodes to train agent for
         threshold (float): Min mean score over 100 episodes consider success
     """
+    # TODO: Consider adding discount rate
     # Assume we're operating brain 0
     brain_name = env.brain_names[0]
     brain = env.brains[brain_name]
@@ -27,13 +28,15 @@ def train(env, agent, weight_path, n_episodes=200, threshold=30.0):
     scores = []
     score_window = deque(maxlen=100)
 
-    agent = agent.randomly_displaced(0.5)
+    best_score = -np.Inf
+    best_agent = agent
 
     for i in range(1, n_episodes + 1):
         env_info = env.reset(train_mode=True)[brain_name]
         state = env_info.vector_observations[0]
         score = 0
         while True:
+            # TODO: Do more runs before updating to get better estimate of reward?
             action = agent.act(state)
             env_info = env.step(action)[brain_name]
             next_state = env_info.vector_observations[0]
@@ -46,12 +49,22 @@ def train(env, agent, weight_path, n_episodes=200, threshold=30.0):
         score_window.append(score)
         scores.append(score)
 
-        print(f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f}",
-              end="\n" if i % 100 == 0 else "")
+        if score > best_score:
+            best_score = score
+            best_agent = agent
+            noise_scale = max(1e-3, noise_scale / 2.0)
+        else:
+            noise_scale = min(0.5, noise_scale * 2.0)
+        agent = best_agent.randomly_displaced(noise_scale)
+
+        print(
+            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (last {score:.2f}, best {best_score:.2f}, sd: {noise_scale:.3f})",
+            end="\n" if i % 100 == 0 else "")
         if len(score_window) >= 100 and np.mean(score_window) > threshold:
             print(f"\nEnvironment solved in {i} episodes.")
-            agent.save_weights(weight_path)
+            best_agent.save_weights(weight_path)
             break
+
     return scores
 
 

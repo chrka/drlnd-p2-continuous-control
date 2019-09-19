@@ -81,12 +81,12 @@ class Agent(object):
 
         return action.cpu().detach().numpy()
 
-    def randomly_displaced(self, sd):
+    def randomly_displaced(self, noise_scale):
         """Create copy with random displacement of weights. """
         # TODO: Make more efficient, not having to create weights in first place
         displaced = Agent(self.state_size, self.action_size, self.device,
                           **self.network_parameters)
-        dist = torch.distributions.normal.Normal(loc=0.0, scale=sd)
+        dist = torch.distributions.uniform.Uniform(-noise_scale, noise_scale)
         for displaced_param, source_param in zip(
                 self.action_network.parameters(),
                 displaced.action_network.parameters()):
