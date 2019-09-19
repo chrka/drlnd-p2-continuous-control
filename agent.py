@@ -40,6 +40,7 @@ class Agent(object):
         # Parameters
 
         # Networks
+        self.network_parameters = kwargs
         self.action_network = PolicyNetwork(state_size, action_size, **kwargs) \
             .to(device)
         """Action Network"""
@@ -79,3 +80,16 @@ class Agent(object):
         self.action_network.train()
 
         return action.cpu().detach().numpy()
+
+    def randomly_displaced(self, sd):
+        """Create copy with random displacement of weights. """
+        # TODO: Make more efficient, not having to create weights in first place
+        displaced = Agent(self.state_size, self.action_size, self.device,
+                          **self.network_parameters)
+        dist = torch.distributions.normal.Normal(loc=0.0, scale=sd)
+        for displaced_param, source_param in zip(
+                self.action_network.parameters(),
+                displaced.action_network.parameters()):
+            displaced_param.data.copy_(source_param.data +
+                                       dist.sample(source_param.size()))
+        return displaced

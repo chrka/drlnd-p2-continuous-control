@@ -27,6 +27,8 @@ def train(env, agent, weight_path, n_episodes=200, threshold=30.0):
     scores = []
     score_window = deque(maxlen=100)
 
+    agent = agent.randomly_displaced(0.5)
+
     for i in range(1, n_episodes + 1):
         env_info = env.reset(train_mode=True)[brain_name]
         state = env_info.vector_observations[0]
