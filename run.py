@@ -25,7 +25,7 @@ def run(env, agent, n_episodes):
         step = 0
         while True:
             step += 1
-            action = agent.act(state)
+            action = agent.act(state, add_noise=False)
             env_info = env.step(action)[brain_name]
             next_state = env_info.vector_observations[0]
             reward = env_info.rewards[0]
@@ -51,7 +51,7 @@ def main(environment, layer1, n_episodes, weights_input):
     env = UnityEnvironment(file_name=environment)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    agent = Agent(state_size=33, action_size=4, device=device, layer1=layer1)
+    agent = Agent(state_size=33, action_size=4, device=device)
     # agent.load_weights(weights_input)
 
     run(env, agent, n_episodes)

@@ -45,7 +45,7 @@ class ReplayBuffer(object):
         self.memory.append(Experience(state, action, reward, next_state, done))
 
     def sample(self):
-        """Returns a batch of experiences from memory.
+        """Returns a sample batch of experiences from memory.
 
         Returns:
             Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]: SARS'+done tuple"""
