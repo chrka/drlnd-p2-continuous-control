@@ -151,6 +151,38 @@ class Agent(object):
         self.memory.add(state, action, reward, next_state, done)
 
         # Learn as soon as we have enough stored experiences
-        if len(self.memory) > self.batch_size:
+        if len(self.memory) > BATCH_SIZE:
             experiences = self.memory.sample()
             self.learn(experiences)
+
+    def learn(self, experiences):
+        states, actions, rewards, next_states, dones = experiences
+
+        # region Update Critic
+        actions_next = self.actor_target(next_states)
+        q_targets_next = self.critic_target(next_states, actions_next)
+
+        q_targets = rewards + (GAMMA * q_targets_next * (1 - dones))
+
+        q_expected = self.critic_local(states, actions)
+        critic_loss = F.mse_loss(q_expected, q_targets)
+
+        # Minimize loss
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+        # endregion
+
+        # region Update Actor
+        actions_pred = self.actor_local(states)
+        actor_loss = -self.critic_local(states, actions_pred).mean()
+
+        # Minimize loss
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
+        # endregion
+
+        # Update target networks
+        soft_update(self.critic_local, self.critic_target, TAU)
+        soft_update(self.actor_local, self.actor_target, TAU)

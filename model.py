@@ -99,7 +99,7 @@ class Critic(nn.Module):
 
         Returns:
             torch.Tensor: Tensor of action values for state(s)"""
-        x = torch.cat(state, action)
+        x = torch.cat((state, action), dim=1)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)

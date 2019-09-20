@@ -21,62 +21,47 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
         n_episodes (int): Max number of episodes to train agent for
         threshold (float): Min mean score over 100 episodes consider success
     """
-    # TODO: Consider adding discount rate
     # Assume we're operating brain 0
     brain_name = env.brain_names[0]
     brain = env.brains[brain_name]
-    num_agents = 20
 
-    mean_scores = []
+    scores = []
     score_window = deque(maxlen=100)
-
-    best_agent = agent
-    previous_best_score = -np.Inf
-    best_ever = -np.Inf
+    best_score = -np.Inf
 
     for i in range(1, n_episodes + 1):
         env_info = env.reset(train_mode=True)[brain_name]
-        scores = np.zeros(num_agents)
 
-        agents = [best_agent] + [best_agent.randomly_displaced(noise_scale)
-                                 for _ in range(num_agents - 1)]
-        states = env_info.vector_observations
+        state = env_info.vector_observations[0]
+        score = 0
 
         while True:
             # TODO: Do more runs before updating to get better estimate of reward?
-            actions = np.array([np.squeeze(agent.act(states[i]))
-                                for i, agent in enumerate(agents)])
-            env_info = env.step(actions)[brain_name]
-            next_states = env_info.vector_observations
-            rewards = env_info.rewards
-            dones = env_info.local_done
-            states = next_states
-            scores += rewards
-            if np.any(dones):
+            action = agent.act(state)
+            env_info = env.step(action)[brain_name]
+            next_state = env_info.vector_observations[0]
+            reward = env_info.rewards[0]
+            done = env_info.local_done[0]
+            agent.step(state, action, reward, next_state, done)
+            state = next_state
+            score += reward
+            if done:
                 break
 
-        mean_score = np.mean(scores)
-        score_window.append(mean_score)
-        mean_scores.append(mean_score)
+        score_window.append(score)
+        scores.append(score)
 
-        best_score = np.max(scores)
-        if best_score > best_ever:
-            best_ever = best_score
+        if score > best_score:
+            best_score = score
 
         print(
-            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (best {best_score:.2f} [ever {best_ever:.2f}], mean {mean_score:.2f}, scale {noise_scale:.3f})",
+            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (last {score:.2f} [best {best_score:.2f}])",
             end="\n" if i % 100 == 0 else "")
         if len(score_window) >= 100 and np.mean(score_window) > threshold:
             print(f"\nEnvironment solved in {i} episodes.")
-            best_agent.save_weights(weight_path)
+            agent.save_weights(weight_path)
             break
 
-        if best_score > previous_best_score:
-            noise_scale = max(0.001, noise_scale / 2.0)
-        else:
-            noise_scale = min(2.0, noise_scale * 2.0)
-        previous_best_score = best_score
-        best_agent = agents[np.argmax(scores)]
 
     return mean_scores
 
@@ -104,7 +89,7 @@ def main(environment, layer1, plot_output, weights_output, seed):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Create agent given model parameters
-    agent = Agent(state_size=33, action_size=4, device=device, layer1=layer1)
+    agent = Agent(state_size=33, action_size=4, device=device)
 
     # Train agent (will save weights if successful)
     scores = train(env, agent, weights_output)
