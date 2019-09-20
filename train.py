@@ -10,7 +10,8 @@ from unityagents import UnityEnvironment
 from agent import Agent
 
 
-def train(env, agent, weight_path, n_episodes=5000, threshold=30.0):
+def train(env, agent, weight_path, n_episodes=5000, threshold=30.0,
+          n_agents=20):
     """Train agent and store weights if successful.
 
     Args:
@@ -24,8 +25,8 @@ def train(env, agent, weight_path, n_episodes=5000, threshold=30.0):
     brain_name = env.brain_names[0]
     brain = env.brains[brain_name]
 
-    scores = []
-    score_window = deque(maxlen=100)
+    mean_scores = []
+    mean_score_window = deque(maxlen=100)
     best_score = -np.Inf
 
     for i in range(1, n_episodes + 1):
@@ -33,32 +34,38 @@ def train(env, agent, weight_path, n_episodes=5000, threshold=30.0):
 
         env_info = env.reset(train_mode=True)[brain_name]
 
-        state = env_info.vector_observations[0]
-        score = 0
+        states = env_info.vector_observations
+        scores = np.zeros(n_agents)
 
         while True:
             # TODO: Do more runs before updating to get better estimate of reward?
-            action = agent.act(state)
-            env_info = env.step(action)[brain_name]
-            next_state = env_info.vector_observations[0]
-            reward = env_info.rewards[0]
-            done = env_info.local_done[0]
-            agent.step(state, action, reward, next_state, done)
-            state = next_state
-            score += reward
-            if done:
+            actions = np.array([np.squeeze(agent.act(states[j]))
+                                for j in range(n_agents)])
+            env_info = env.step(actions)[brain_name]
+            next_states = env_info.vector_observations
+            rewards = env_info.rewards
+            dones = env_info.local_done
+            for j in range(n_agents):
+                agent.step(states[j], actions[j], rewards[j],
+                           next_states[j], dones[j])
+            states = next_states
+            scores += rewards
+            if np.any(dones):
                 break
 
-        score_window.append(score)
-        scores.append(score)
+        mean_score = np.mean(scores)
+        max_score = np.max(scores)
 
-        if score > best_score:
-            best_score = score
+        mean_score_window.append(mean_score)
+        mean_scores.append(mean_score)
+
+        if max_score > best_score:
+            best_score = max_score
 
         print(
-            f"\rEpisode {i:4d}\tAverage score {np.mean(score_window):.2f} (last {score:.2f} [best {best_score:.2f}])",
+            f"\rEpisode {i:4d}\tAverage score {np.mean(mean_score_window):.2f} (last {mean_score:.2f} [best {best_score:.2f}])",
             end="\n" if i % 100 == 0 else "")
-        if len(score_window) >= 100 and np.mean(score_window) > threshold:
+        if len(mean_score_window) >= 100 and np.mean(mean_score_window) > threshold:
             print(f"\nEnvironment solved in {i} episodes.")
             agent.save_weights(weight_path)
             break
@@ -68,7 +75,7 @@ def train(env, agent, weight_path, n_episodes=5000, threshold=30.0):
             agent.save_weights(f"{weight_path}-{i}-CHECKPOINT")
 
     # Save weights even if not solved
-    if len(score_window) < 100 or np.mean(score_window) < threshold:
+    if len(mean_score_window) < 100 or np.mean(mean_score_window) < threshold:
         print("\nFailed to solve environment.")
         agent.save_weights(weight_path + "-FAILED")
 
@@ -102,7 +109,7 @@ def main(environment, layer1, plot_output, scores_output, weights_output, seed):
         torch.random.manual_seed(seed)
 
     # Initialize Unity environment from external file
-    env = UnityEnvironment(file_name=environment, no_graphics=True,
+    env = UnityEnvironment(file_name=environment, no_graphics=False,
                            seed=seed if seed else 0)
 
     # Use CUDA if available, cpu otherwise

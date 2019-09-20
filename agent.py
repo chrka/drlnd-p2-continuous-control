@@ -14,12 +14,12 @@ from replay import ReplayBuffer
 BUFFER_SIZE = int(1e6)  # replay buffer size
 BATCH_SIZE = 128  # minibatch size
 GAMMA = 0.99  # discount factor
-TAU = 1e-2  # for soft update of target parameters
+TAU = 1e-3  # for soft update of target parameters
 LR_ACTOR = 1e-4  # learning rate of the actor
 LR_CRITIC = 3e-4  # learning rate of the critic
 WEIGHT_DECAY = 0.0001  # L2 weight decay
 NOISE_SD = 0.1
-UPDATE_EVERY = 4
+UPDATE_EVERY = 200
 
 
 def soft_update(local_network, target_network, tau):
