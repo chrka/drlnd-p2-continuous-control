@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from model import PolicyNetwork, Actor, Critic
+from model import Actor, Critic
 from noise import OUNoise
 from replay import ReplayBuffer
 
@@ -170,6 +170,7 @@ class Agent(object):
         # Minimize loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1.0)
         self.critic_optimizer.step()
         # endregion
 
