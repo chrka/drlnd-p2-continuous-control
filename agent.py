@@ -19,7 +19,8 @@ LR_ACTOR = 1e-4  # learning rate of the actor
 LR_CRITIC = 3e-4  # learning rate of the critic
 WEIGHT_DECAY = 0.0001  # L2 weight decay
 NOISE_SD = 0.1
-UPDATE_EVERY = 200
+UPDATE_EVERY = 20*10
+NUM_UPDATES = 10
 
 
 def soft_update(local_network, target_network, tau):
@@ -160,8 +161,9 @@ class Agent(object):
         # Learn as soon as we have enough stored experiences
         self.t_step = (self.t_step + 1) % UPDATE_EVERY
         if self.t_step == 0 and len(self.memory) > BATCH_SIZE:
-            experiences = self.memory.sample()
-            self.learn(experiences)
+            for _ in range(NUM_UPDATES):
+                experiences = self.memory.sample()
+                self.learn(experiences)
 
     def learn(self, experiences):
         states, actions, rewards, next_states, dones = experiences

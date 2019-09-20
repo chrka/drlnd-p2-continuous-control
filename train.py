@@ -63,7 +63,7 @@ def train(env, agent, weight_path, n_episodes=5000, threshold=30.0,
             best_score = max_score
 
         print(
-            f"\rEpisode {i:4d}\tAverage score {np.mean(mean_score_window):.2f} (last {mean_score:.2f} [best {best_score:.2f}])",
+            f"\rEpisode {i:4d}\tAverage score {np.mean(mean_score_window):.2f} (last {mean_score:.2f} [best now {max_score:.2f} vs. ever {best_score:.2f}])",
             end="\n" if i % 100 == 0 else "")
         if len(mean_score_window) >= 100 and np.mean(mean_score_window) > threshold:
             print(f"\nEnvironment solved in {i} episodes.")
@@ -109,7 +109,7 @@ def main(environment, layer1, plot_output, scores_output, weights_output, seed):
         torch.random.manual_seed(seed)
 
     # Initialize Unity environment from external file
-    env = UnityEnvironment(file_name=environment, no_graphics=False,
+    env = UnityEnvironment(file_name=environment, no_graphics=True,
                            seed=seed if seed else 0)
 
     # Use CUDA if available, cpu otherwise
