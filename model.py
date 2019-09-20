@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class Actor(nn.Module):
     """Actor network (implements policy)"""
 
-    def __init__(self, state_size, action_size, layer1=128, layer2=64):
+    def __init__(self, state_size, action_size, layer1=64, layer2=32):
         super().__init__()
 
         self.fc1 = nn.Linear(state_size, layer1)
@@ -46,7 +46,7 @@ class Critic(nn.Module):
     """Critic network (estimates Q-values)"""
 
     def __init__(self, state_size, action_size, layer0=64,
-                 layer1=128, layer2=64, layer3=32):
+                 layer1=64, layer2=32, layer3=8):
         super().__init__()
 
         self.fc0 = nn.Linear(state_size, layer0)
@@ -62,7 +62,7 @@ class Critic(nn.Module):
         """Initializes weights with random values"""
         torch.nn.init.xavier_normal_(self.fc0.weight,
                                      gain=torch.nn.init.calculate_gain(
-                                         'leaky_relu'))
+                                         'relu'))
         torch.nn.init.xavier_normal_(self.fc1.weight,
                                      gain=torch.nn.init.calculate_gain('relu'))
         torch.nn.init.xavier_normal_(self.fc2.weight,
@@ -81,7 +81,7 @@ class Critic(nn.Module):
         Returns:
             torch.Tensor: Tensor of action values for state(s)"""
         x = self.fc0(state)
-        x = F.leaky_relu(x)
+        x = F.relu(x)
         # x = state
         x = torch.cat((x, action), dim=1)
         x = self.fc1(x)

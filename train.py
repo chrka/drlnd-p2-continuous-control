@@ -10,7 +10,7 @@ from unityagents import UnityEnvironment
 from agent import Agent
 
 
-def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
+def train(env, agent, weight_path, n_episodes=20, threshold=30.0,
           noise_scale=0.5):
     """Train agent and store weights if successful.
 
@@ -63,7 +63,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             break
 
     # Save weights even if not solved
-    if len(score_window) >= 100 and np.mean(score_window) < threshold:
+    if len(score_window) < 100 or np.mean(score_window) < threshold:
         print("f\nFailed to solve environment.")
         agent.save_weights(weight_path + "-NONOPTIMAL")
 
@@ -72,7 +72,8 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
 def export_scores(path, score):
     """Quick and dirty export of array to text file"""
     with open(path, "w") as f:
-        f.writelines(map(str, score))
+        lines = map(lambda x: str(x) + '\n', score)
+        f.writelines(lines)
 
 @click.command()
 @click.option('--environment', required=True,
