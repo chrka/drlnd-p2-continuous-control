@@ -69,6 +69,8 @@ class Critic(nn.Module):
                                      gain=torch.nn.init.calculate_gain('relu'))
         torch.nn.init.xavier_normal_(self.fc3.weight,
                                      gain=torch.nn.init.calculate_gain('relu'))
+        torch.nn.init.xavier_normal_(self.fc4.weight,
+                                     gain=torch.nn.init.calculate_gain('linear'))
 
     def forward(self, state, action):
         """Maps (state, action) to Q value
