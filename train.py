@@ -94,7 +94,8 @@ def main(environment, layer1, plot_output, scores_output, weights_output, seed):
         torch.random.manual_seed(seed)
 
     # Initialize Unity environment from external file
-    env = UnityEnvironment(file_name=environment, no_graphics=True)
+    env = UnityEnvironment(file_name=environment, no_graphics=True,
+                           seed=seed if seed else 0)
 
     # Use CUDA if available, cpu otherwise
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
