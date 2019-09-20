@@ -78,10 +78,12 @@ class Actor(nn.Module):
 class Critic(nn.Module):
     """Critic network (estimates Q-values)"""
 
-    def __init__(self, state_size, action_size, layer1=32, layer2=16, layer3=8):
+    def __init__(self, state_size, action_size, layer0=16,
+                 layer1=32, layer2=16, layer3=8):
         super().__init__()
 
-        self.fc1 = nn.Linear(state_size + action_size, layer1)
+        self.fc0 = nn.Linear(state_size, layer0)
+        self.fc1 = nn.Linear(layer0 + action_size, layer1)
         self.fc2 = nn.Linear(layer1, layer2)
         self.fc3 = nn.Linear(layer2, layer3)
         self.fc4 = nn.Linear(layer3, 1)
@@ -99,7 +101,9 @@ class Critic(nn.Module):
 
         Returns:
             torch.Tensor: Tensor of action values for state(s)"""
-        x = torch.cat((state, action), dim=1)
+        x = self.fc0(state)
+        x = F.leaky_relu(x)
+        x = torch.cat((x, action), dim=1)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
