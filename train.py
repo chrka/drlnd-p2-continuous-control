@@ -91,6 +91,9 @@ def export_scores(path, score):
 @click.option('--seed', type=int, help="Random seed")
 def main(environment, layer1, plot_output, scores_output, weights_output, seed):
     # Set seed if given to help with reproducibility
+    if not seed:
+        seed = random.randint(0, 30000000)
+
     if seed:
         print(f"Using seed {seed}")
         random.seed(seed)
