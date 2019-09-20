@@ -62,9 +62,17 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             agent.save_weights(weight_path)
             break
 
+    # Save weigths even if not solved
+    if len(score_window) >= 100 and np.mean(score_window) < threshold:
+        print("f\nFailed to solve environment.")
+        agent.save_weights(weight_path + "-NONOPTIMAL")
 
     return scores
 
+def export_scores(path, score):
+    """Quick and dirty export of array to text file"""
+    with open(path, "w") as f:
+        f.writelines(map(str, score))
 
 @click.command()
 @click.option('--environment', required=True,
@@ -72,10 +80,12 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
 @click.option('--layer1', default=16, help="Number of units in input layer")
 @click.option('--plot-output', default="score.png",
               help="Output file for score plot", type=click.Path())
+@click.option('--scores-output', default="scores.txt",
+              help="Output file for scores", type=click.Path())
 @click.option('--weights-output', default='weights.pth',
               help="File to save weights to after success", type=click.Path())
 @click.option('--seed', type=int, help="Random seed")
-def main(environment, layer1, plot_output, weights_output, seed):
+def main(environment, layer1, plot_output, scores_output, weights_output, seed):
     # Set seed if given to help with reproducibility
     if seed:
         print(f"Using seed {seed}")
@@ -96,7 +106,8 @@ def main(environment, layer1, plot_output, weights_output, seed):
 
     env.close()
 
-    # Generate score plot
+    # Save scores and generate crude plot
+    export_scores(scores_output, scores)
     plt.plot(np.arange(len(scores)), scores)
     plt.ylabel('Score')
     plt.xlabel('Episode')
