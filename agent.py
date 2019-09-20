@@ -14,11 +14,12 @@ from replay import ReplayBuffer
 BUFFER_SIZE = int(1e6)  # replay buffer size
 BATCH_SIZE = 128  # minibatch size
 GAMMA = 0.99  # discount factor
-TAU = 1e-3  # for soft update of target parameters
+TAU = 1e-2  # for soft update of target parameters
 LR_ACTOR = 1e-4  # learning rate of the actor
 LR_CRITIC = 3e-4  # learning rate of the critic
 WEIGHT_DECAY = 0.0001  # L2 weight decay
 NOISE_SD = 0.1
+UPDATE_EVERY = 4
 
 
 def soft_update(local_network, target_network, tau):
@@ -63,6 +64,8 @@ class Agent(object):
         self.device = device
         """Device to use for calculations"""
 
+        self.t_step = 0
+
         # Parameters
 
         # Actor network
@@ -88,6 +91,9 @@ class Agent(object):
 
         # Replay memory
         self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, self.device)
+
+    def reset(self):
+        self.noise.reset()
 
     def save_weights(self, path):
         """Save local network weights.
@@ -152,7 +158,8 @@ class Agent(object):
         self.memory.add(state, action, reward, next_state, done)
 
         # Learn as soon as we have enough stored experiences
-        if len(self.memory) > BATCH_SIZE:
+        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        if self.t_step == 0 and len(self.memory) > BATCH_SIZE:
             experiences = self.memory.sample()
             self.learn(experiences)
 
