@@ -10,7 +10,7 @@ from unityagents import UnityEnvironment
 from agent import Agent
 
 
-def train(env, agent, weight_path, n_episodes=5000, threshold=30.0,
+def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
           n_agents=20):
     """Train agent and store weights if successful.
 
