@@ -52,7 +52,7 @@ def main(environment, layer1, n_episodes, weights_input):
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     agent = Agent(state_size=33, action_size=4, device=device)
-    agent.load_weights(weights_input + '-NONOPTIMAL')
+    agent.load_weights(weights_input)
 
     run(env, agent, n_episodes)
 
