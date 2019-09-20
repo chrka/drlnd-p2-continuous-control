@@ -62,7 +62,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             agent.save_weights(weight_path)
             break
 
-    # Save weigths even if not solved
+    # Save weights even if not solved
     if len(score_window) >= 100 and np.mean(score_window) < threshold:
         print("f\nFailed to solve environment.")
         agent.save_weights(weight_path + "-NONOPTIMAL")
