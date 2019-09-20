@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class Actor(nn.Module):
     """Actor network (implements policy)"""
 
-    def __init__(self, state_size, action_size, layer1=128, layer2=64):
+    def __init__(self, state_size, action_size, layer1=32, layer2=16):
         super().__init__()
 
         self.fc1 = nn.Linear(state_size, layer1)
@@ -45,8 +45,8 @@ class Actor(nn.Module):
 class Critic(nn.Module):
     """Critic network (estimates Q-values)"""
 
-    def __init__(self, state_size, action_size, layer0=64,
-                 layer1=128, layer2=128, layer3=64):
+    def __init__(self, state_size, action_size, layer0=16,
+                 layer1=32, layer2=16, layer3=8):
         super().__init__()
 
         self.fc0 = nn.Linear(state_size, layer0)
