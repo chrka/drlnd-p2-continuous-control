@@ -10,13 +10,15 @@ from model import PolicyNetwork, Actor, Critic
 from noise import OUNoise
 from replay import ReplayBuffer
 
+# TODO: Make parameters of Agent
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 128        # minibatch size
-GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-4         # learning rate of the actor
-LR_CRITIC = 3e-4        # learning rate of the critic
-WEIGHT_DECAY = 0.0001   # L2 weight decay
+BATCH_SIZE = 128  # minibatch size
+GAMMA = 0.99  # discount factor
+TAU = 1e-3  # for soft update of target parameters
+LR_ACTOR = 1e-4  # learning rate of the actor
+LR_CRITIC = 3e-4  # learning rate of the critic
+WEIGHT_DECAY = 0.0001  # L2 weight decay
+
 
 def soft_update(local_network, target_network, tau):
     """Soft update of target model parameters.
@@ -30,6 +32,7 @@ def soft_update(local_network, target_network, tau):
                                          local_network.parameters()):
         target_param.data.copy_(tau * local_param.data +
                                 (1.0 - tau) * target_param.data)
+
 
 class Agent(object):
     """DDPG Agent that interacts and learns from the environment."""
@@ -62,21 +65,25 @@ class Agent(object):
         # Parameters
 
         # Actor network
-        self.actor_local = Actor(state_size, action_size, **actor_args).to(device)
-        self.actor_target = Actor(state_size, action_size, **actor_args).to(device)
+        self.actor_local = Actor(state_size, action_size, **actor_args).to(
+            device)
+        self.actor_target = Actor(state_size, action_size, **actor_args).to(
+            device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(),
                                           lr=LR_ACTOR)
 
         # Critic network
 
-        self.critic_local = Critic(state_size, action_size, **critic_args).to(device)
-        self.critic_target = Critic(state_size, action_size, **critic_args).to(device)
+        self.critic_local = Critic(state_size, action_size, **critic_args).to(
+            device)
+        self.critic_target = Critic(state_size, action_size, **critic_args).to(
+            device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(),
-                                           lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
+                                           lr=LR_CRITIC,
+                                           weight_decay=WEIGHT_DECAY)
 
         # Noise process for exploration
         self.noise = OUNoise(action_size)
-
 
         # Replay memory
         self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, self.device)
@@ -86,14 +93,23 @@ class Agent(object):
 
         Args:
             path (string): File to save to"""
-        self.action_network.save_weights(path)
+        torch.save({
+            'actor_local': self.actor_local.state_dict(),
+            'actor_target': self.actor_target.state_dict(),
+            'critic_local': self.critic_local.state_dict(),
+            'critic_target': self.critic_target.state_dict()
+        }, path)
 
     def load_weights(self, path):
         """Load local network weights.
 
         Args:
             path (string): File to load weights from"""
-        self.action_network.load_weights(path)
+        checkpoint = torch.load(path)
+        self.actor_local.load_state_dict(checkpoint['actor_local'])
+        self.actor_target.load_state_dict(checkpoint['actor_target'])
+        self.critic_local.load_state_dict(checkpoint['critic_local'])
+        self.critic_target.load_state_dict(checkpoint['critic_target'])
 
     def act(self, state, add_noise=True):
         """Returns action for given state according to the current policy
@@ -123,16 +139,18 @@ class Agent(object):
 
         return action
 
-    def randomly_displaced(self, noise_scale):
-        """Create copy with random displacement of weights. """
-        # TODO: Make more efficient, not having to create weights in first place
-        displaced = Agent(self.state_size, self.action_size, self.device,
-                          **self.network_parameters)
-        dist = torch.distributions.uniform.Uniform(-noise_scale, noise_scale)
-        for displaced_param, source_param in zip(
-                self.action_network.parameters(),
-                displaced.action_network.parameters()):
-            displaced_param.data.copy_(source_param.data +
-                                       dist.sample(source_param.size()))
-        return displaced
+    def step(self, state, action, reward, next_state, done):
+        """Save experience and learn if due.
+        Args:
+            state (Tensor): Current state
+            action (int): Chosen action
+            reward (float): Resulting reward
+            next_state (Tensor): State after action
+            done (bool): True if terminal state
+        """
+        self.memory.add(state, action, reward, next_state, done)
 
+        # Learn as soon as we have enough stored experiences
+        if len(self.memory) > self.batch_size:
+            experiences = self.memory.sample()
+            self.learn(experiences)

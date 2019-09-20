@@ -52,20 +52,6 @@ class Actor(nn.Module):
         self.fc2 = nn.Linear(layer1, layer2)
         self.fc3 = nn.Linear(layer2, action_size)
 
-    def save_weights(self, path):
-        """Save network weights.
-
-        Args:
-            path (string): File to save to"""
-        torch.save(self.state_dict(), path)
-
-    def load_weights(self, path):
-        """Load network weights.
-
-        Args:
-            path (string): File to load weights from"""
-        self.load_state_dict(torch.load(path))
-
     def initialize_parameters(self):
         """Initializes parameters with random values"""
         # TODO: Implement this
@@ -99,20 +85,6 @@ class Critic(nn.Module):
         self.fc2 = nn.Linear(layer1, layer2)
         self.fc3 = nn.Linear(layer2, layer3)
         self.fc4 = nn.Linear(layer3, 1)
-
-    def save_weights(self, path):
-        """Save network weights.
-
-        Args:
-            path (string): File to save to"""
-        torch.save(self.state_dict(), path)
-
-    def load_weights(self, path):
-        """Load network weights.
-
-        Args:
-            path (string): File to load weights from"""
-        self.load_state_dict(torch.load(path))
 
     def initialize_parameters(self):
         """Initializes parameters with random values"""
