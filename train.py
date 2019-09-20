@@ -63,7 +63,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             break
 
 
-    return mean_scores
+    return scores
 
 
 @click.command()
