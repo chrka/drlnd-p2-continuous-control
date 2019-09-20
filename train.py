@@ -10,8 +10,7 @@ from unityagents import UnityEnvironment
 from agent import Agent
 
 
-def train(env, agent, weight_path, n_episodes=20, threshold=30.0,
-          noise_scale=0.5):
+def train(env, agent, weight_path, n_episodes=5000, threshold=30.0):
     """Train agent and store weights if successful.
 
     Args:
@@ -62,10 +61,14 @@ def train(env, agent, weight_path, n_episodes=20, threshold=30.0,
             agent.save_weights(weight_path)
             break
 
+        if i % 100 == 0:
+            # Save checkpoint
+            agent.save_weights(f"{weight_path}-{i}-CHECKPOINT")
+
     # Save weights even if not solved
     if len(score_window) < 100 or np.mean(score_window) < threshold:
         print("\nFailed to solve environment.")
-        agent.save_weights(weight_path + "-NONOPTIMAL")
+        agent.save_weights(weight_path + "-FAILED")
 
     return scores
 
