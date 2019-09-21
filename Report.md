@@ -1,39 +1,57 @@
 # Report
 
-**REWRITE ALL OF THIS**
-
-The agent was trained using deep Q-learning with soft updates (ie., instead
-of fully replacing the target network with the local network, it is moved
-towards the local network by a fraction $\tau = 0.001$).
+The agent was trained using Deep Deterministic Policy Gradients (DDPG). 
+The agent collected experiences from 20 instances in parallel and learning
+took place 10 times every 20th time step (following a suggestion from the 
+benchmark in the project description).
 
 A replay buffer of size 100000 was used from which was drawn random batches of
-64 memories during training. Training took place every 4th step.
+128 experiences during training. Soft updates between both actor and
+critic's local and target networks both mixed in a fraction $\tau=0.005$ of the
+local network.
 
-The discount factor $\gamma$ was set to 0.99, and a learning rate $\alpha$ of
-0.0005 was used.
+The discount factor $\gamma$ was set to 0.99, and a learning rate $\alpha=0.0005$
+was used for both actor and critic.
+ 
+To aid exploration, Orstein-Uhlenbeck noise (with $\sigma=0.10$, $\tau=0.15) was
+added to the actors actions when gathering experiences.
 
-The network used consisted of an input layer from the 37 state variables to 
-32 fully connected nodes with ReLU activation functions,
-followed by another fully connected hidden layer — also ReLU — of the same
-size of 32 nodes. The final output layer used linear activation functions to
-the 4 action value outputs.
+After trying out various network architectures of different sizes and shapes,
+I eventually settled  on the following:
 
-The agent solves the task in about 1900 episodes.  Here is an example of
-the scores achieved per episode using random seed 20190415 where the
-task was solved in 1961 episodes:
+**Actor network layers:**
 
-![Score per Episode (seed 20190415)](score.png)
+| Input | Output | Activation function |
+|-------|--------|---------------------|
+| States (33) | 256 | ReLU |
+| 256 | 128 | Relu |
+| 128 | Actions (4) | tanh | 
+
+**Critic network layers:**
+
+| Input | Output | Activation function |
+|-------|--------|---------------------|
+| States (33) | 256 | ReLU |
+| 256 + Actions (4) | 128 | Relu |
+| 128 | Q-value (1)  | Linear | 
+
+The agent solved the task in 175 episodes (that is, managed to keep an average
+mean score of the twenty instances of more than +30 for 100 episodes):
+
+![Score per Episode (seed 20413943)](score.png)
 
 ## Future improvements
 
-Further tweaking of hyper-parameters might prove beneficial; I have mainly
-experimented with the $\epsilon$-decay rate, and the size of the neural
-network layers.
+I initially had  problems finding a good combination of network architecture
+and hyperparameters for the training algorithm.  While the combination that I
+eventually settled on seems to work pretty well, there seems to still be a
+fair bit of variance between runs.  It would be interesting to see how well 
+automated methods for hyperparameter search would fare, be it some form of 
+grid search or bayesian methods.
 
-Using a slightly more sophisticated algorithm would also likely improve the
-time taken to solve the task, in particular, using Double DQN to improve the agent's 
-estimate of the Q-values, or using Prioritized Experience Replay to make better
-use of the replay buffer.
+I would also like to try out some other algorithms (eg., PPO or A2C)
+ on this problem and see if they might work even better. 
+ (I briefly tried some variants of Stochastic Policy Search but could not get it to work.)
 
 
 ## Further reading
