@@ -70,7 +70,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
             agent.save_weights(weight_path)
             break
 
-        if i % 100 == 0:
+        if i % 50 == 0:
             # Save checkpoint
             agent.save_weights(f"{weight_path}-{i}-CHECKPOINT")
 
