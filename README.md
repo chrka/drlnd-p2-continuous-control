@@ -1,6 +1,6 @@
 # DRLND Project 2: Continuous Control
 
-_insert youtube capture here
+<iframe width="560" height="315" src="https://www.youtube.com/embed/5al5rlDgH7I" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The goal of the agent is to control a double-jointed arm and have it follow
 a goal target.
@@ -13,7 +13,9 @@ $[-1,+1]$.
 
 The agent receives a reward of +0.1 each time step the agent manages to keep
 the arm's hand in the goal target. The task is considered solved when the agent
-manages to get an average score of at least +30 over 100 consecutive episodes.
+manages to get an average score of at least +30 over 100 consecutive episodes. 
+(This implementation runs 20 agents simultaneously, and has to maintain a mean score
+of at least +30 over 100 episodes.)
 
 ## Installation
 
@@ -36,7 +38,19 @@ pip install -r requirements.txt
 
 ### Unity environment
 
-Download the Unity environment appropriate for your operating system using the links below and unzip
+**For training:**
+
+Download the multi-agent Unity environment appropriate for your operating system using the links below and unzip
+it into the project folder.
+
+- Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Linux.zip)
+- Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher.app.zip)
+- Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86.zip)
+- Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86_64.zip)
+        
+**For visualizing the agent:**
+
+Download the single-agent Unity environment appropriate for your operating system using the links below and unzip
 it into the project folder.
 
 - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Linux.zip)
@@ -44,10 +58,12 @@ it into the project folder.
 - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Windows_x86.zip)
 - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Windows_x86_64.zip)
 
+
+
 ## Training and Running the Agent
 
-To train the agent, use the `train.py` program which takes the Unity environment
-and optional arguments to experiment with various parameters.
+To train the agent, use the `train.py` program which takes the Unity environment,
+and optionally locations of output files and/or a random seed.
 
 ```shell
 (drlnd) $ python train.py --help
@@ -55,16 +71,12 @@ Usage: train.py [OPTIONS]
 
 Options:
   --environment PATH     Path to Unity environment  [required]
-    ...
+  --plot-output PATH     Output file for score plot
+  --scores-output PATH   Output file for scores
+  --weights-output PATH  File to save weights to after success
   --seed INTEGER         Random seed
   --help                 Show this message and exit.
 ```
-
-The default values are:
-
-| Option | Value |
-|--------|-------|
-|seed | None — do not set | 
 
 For example:
 
@@ -73,7 +85,7 @@ For example:
 ```
 
 After successfully training the agent, use the `run.py` program to load
-the weights and run the simulation, which takes similar parameters as
+weights and run the simulation, which takes similar parameters as
 the training program:
 
 ```shell
@@ -86,13 +98,9 @@ Options:
   --help                Show this message and exit.
 ```
 
-Default values for running the agent are:
-
-| Option | Value |
-|--------|-------|
-|n-episodes | 3|
+**Note that running the agent requires the single-agent Unity environment.**
 
 For example:
 ```
-(drlnd) $ python run.py --environment=Reacher.app ...
+(drlnd) $ python run.py --environment=Reacher.app --weights-input weights.pth
 ```
