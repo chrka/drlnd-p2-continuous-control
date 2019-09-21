@@ -14,11 +14,11 @@ from replay import ReplayBuffer
 BUFFER_SIZE = int(1e6)  # replay buffer size
 BATCH_SIZE = 128  # minibatch size
 GAMMA = 0.99  # discount factor
-TAU = 1e-3  # for soft update of target parameters
-LR_ACTOR = 1e-4  # learning rate of the actor
-LR_CRITIC = 1e-4  # learning rate of the critic
+TAU = 5e-3  # for soft update of target parameters
+LR_ACTOR = 5e-4  # learning rate of the actor
+LR_CRITIC = 5e-4  # learning rate of the critic
 WEIGHT_DECAY = 0  # L2 weight decay
-NOISE_SD = 0.05
+NOISE_SD = 0.10
 UPDATE_EVERY = 20 * 20
 NUM_UPDATES = 10
 
@@ -180,7 +180,7 @@ class Agent(object):
         # Minimize loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        # torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1.0)
         self.critic_optimizer.step()
         # endregion
 
