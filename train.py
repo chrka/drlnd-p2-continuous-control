@@ -79,7 +79,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
         print("\nFailed to solve environment.")
         agent.save_weights(weight_path + "-FAILED")
 
-    return scores
+    return mean_scores
 
 def export_scores(path, score):
     """Quick and dirty export of array to text file"""
