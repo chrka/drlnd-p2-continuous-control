@@ -12,15 +12,16 @@ from replay import ReplayBuffer
 
 # TODO: Make parameters of Agent
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 128  # minibatch size
-GAMMA = 0.99  # discount factor
-TAU = 5e-3  # for soft update of target parameters
-LR_ACTOR = 5e-4  # learning rate of the actor
-LR_CRITIC = 5e-4  # learning rate of the critic
-WEIGHT_DECAY = 0  # L2 weight decay
-NOISE_SD = 0.10
-UPDATE_EVERY = 20 * 20
-NUM_UPDATES = 10
+BATCH_SIZE = 128        # minibatch size
+GAMMA = 0.99            # discount factor
+TAU = 5e-3              # for soft update of target parameters
+LR_ACTOR = 5e-4         # learning rate of the actor
+LR_CRITIC = 5e-4        # learning rate of the critic
+WEIGHT_DECAY = 0        # L2 weight decay
+NOISE_SD = 0.10         # noise scale
+UPDATE_EVERY = 20 * 20  # update every n-th `step`
+NUM_UPDATES = 10        # number of updates to perform
+
 
 
 def soft_update(local_network, target_network, tau):
@@ -30,6 +31,7 @@ def soft_update(local_network, target_network, tau):
     Args:
         local_model (QNetwork): Local model, source of changes
         target_model (QNetwork): Target model, receiver of changes
+        tau (float): Fraction of local model to mix in
     """
     for target_param, local_param in zip(target_network.parameters(),
                                          local_network.parameters()):
@@ -48,13 +50,8 @@ class Agent(object):
             state_size (int): Dimension of each state
             action_size (int): Dimension of each action
             device (torch.device): Device to use for calculations
-            replay_buffer_size (int): Size of replay buffer
-            batch_size (int): Size of experience batches during training
-            discount_factor (float): Discount factor (gamma)
-            soft_update (float): Soft update coefficient (tau)
-            learning_rate (float): Learning rate (alpha)
-            update_every (int): Steps between updating the network
-            **kwargs: Arguments describing the networks
+            actor_args (dict): Arguments describing the actor network
+            critic_args (dict): Arguments describing the critic network
         """
         self.state_size = state_size
         """Dimension of each state"""
@@ -66,6 +63,7 @@ class Agent(object):
         """Device to use for calculations"""
 
         self.t_step = 0
+        """Timestep between training updates"""
 
         # Parameters
 
@@ -94,6 +92,7 @@ class Agent(object):
         self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, self.device)
 
     def reset(self):
+        """Reset state of agent."""
         self.noise.reset()
 
     def save_weights(self, path):
@@ -166,6 +165,7 @@ class Agent(object):
                 self.learn(experiences)
 
     def learn(self, experiences):
+        """Learn from batch of experiences."""
         states, actions, rewards, next_states, dones = experiences
 
         # region Update Critic

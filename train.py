@@ -9,9 +9,9 @@ from unityagents import UnityEnvironment
 
 from agent import Agent
 
+N_AGENTS = 20
 
-def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
-          n_agents=20):
+def train(env, agent, weight_path, n_episodes=1000, threshold=30.0):
     """Train agent and store weights if successful.
 
     Args:
@@ -35,17 +35,17 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0,
         env_info = env.reset(train_mode=True)[brain_name]
 
         states = env_info.vector_observations
-        scores = np.zeros(n_agents)
+        scores = np.zeros(N_AGENTS)
 
         while True:
             # TODO: Do more runs before updating to get better estimate of reward?
             actions = np.array([np.squeeze(agent.act(states[j]))
-                                for j in range(n_agents)])
+                                for j in range(N_AGENTS)])
             env_info = env.step(actions)[brain_name]
             next_states = env_info.vector_observations
             rewards = env_info.rewards
             dones = env_info.local_done
-            for j in range(n_agents):
+            for j in range(N_AGENTS):
                 agent.step(states[j], actions[j], rewards[j],
                            next_states[j], dones[j])
             states = next_states
@@ -90,7 +90,6 @@ def export_scores(path, score):
 @click.command()
 @click.option('--environment', required=True,
               help="Path to Unity environment", type=click.Path())
-@click.option('--layer1', default=16, help="Number of units in input layer")
 @click.option('--plot-output', default="score.png",
               help="Output file for score plot", type=click.Path())
 @click.option('--scores-output', default="scores.txt",
@@ -98,7 +97,7 @@ def export_scores(path, score):
 @click.option('--weights-output', default='weights.pth',
               help="File to save weights to after success", type=click.Path())
 @click.option('--seed', type=int, help="Random seed")
-def main(environment, layer1, plot_output, scores_output, weights_output, seed):
+def main(environment, plot_output, scores_output, weights_output, seed):
     # Set seed if given to help with reproducibility
     if not seed:
         seed = random.randint(0, 30000000)

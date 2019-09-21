@@ -4,6 +4,7 @@ from unityagents import UnityEnvironment
 
 from agent import Agent
 
+# TODO: Support running multi-agent environment
 
 def run(env, agent, n_episodes):
     """Run a pre-trained agent.
@@ -43,11 +44,10 @@ def run(env, agent, n_episodes):
 @click.command()
 @click.option('--environment', required=True,
               help="Path to Unity environment", type=click.Path())
-@click.option('--layer1', default=16, help="Number of units in hidden layer")
 @click.option('--n-episodes', default=3, help="Number of episodes to run")
 @click.option('--weights-input', default='weights.pth', help="Network weights",
               type=click.Path())
-def main(environment, layer1, n_episodes, weights_input):
+def main(environment, n_episodes, weights_input):
     env = UnityEnvironment(file_name=environment)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
