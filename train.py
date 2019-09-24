@@ -30,7 +30,7 @@ def train(env, agent, weight_path, n_episodes=1000, threshold=30.0):
     best_score = -np.Inf
 
     for i in range(1, n_episodes + 1):
-        agent.reset()
+        agent.new_episode()
 
         env_info = env.reset(train_mode=True)[brain_name]
 

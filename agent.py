@@ -8,7 +8,7 @@ import torch.optim as optim
 
 from model import Actor, Critic
 from noise import OUNoise
-from replay import ReplayBuffer
+from replay import PrioritizedExperienceReplayBuffer
 
 # TODO: Make parameters of Agent
 BUFFER_SIZE = int(1e6)  # replay buffer size
@@ -21,7 +21,7 @@ WEIGHT_DECAY = 0        # L2 weight decay
 NOISE_SD = 0.10         # noise scale
 UPDATE_EVERY = 20 * 20  # update every n-th `step`
 NUM_UPDATES = 10        # number of updates to perform
-
+PRIORITY_ALPHA = 0.8    # priority exponent
 
 
 def soft_update(local_network, target_network, tau):
@@ -43,6 +43,7 @@ class Agent(object):
     """DDPG Agent that interacts and learns from the environment."""
 
     def __init__(self, state_size, action_size, device,
+                 initial_beta=0.0, delta_beta=0.005, # 1.0 in ~200 episodes
                  actor_args={}, critic_args={}):
         """Initializes the DQN agent.
 
@@ -61,6 +62,10 @@ class Agent(object):
 
         self.device = device
         """Device to use for calculations"""
+
+        self.initial_beta = initial_beta
+        self.delta_beta = delta_beta
+        self.beta = initial_beta
 
         self.t_step = 0
         """Timestep between training updates"""
@@ -89,11 +94,16 @@ class Agent(object):
         self.noise = OUNoise(action_size, sigma=NOISE_SD)
 
         # Replay memory
-        self.memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, self.device)
+        self.p_max = 1.0
+        self.memory = PrioritizedExperienceReplayBuffer(BUFFER_SIZE, BATCH_SIZE,
+                                                        self.device)
 
-    def reset(self):
+    def new_episode(self):
         """Reset state of agent."""
         self.noise.reset()
+
+        # Update beta
+        self.beta = min(1.0, self.beta + self.delta_beta)
 
     def save_weights(self, path):
         """Save local network weights.
@@ -155,7 +165,7 @@ class Agent(object):
             next_state (Tensor): State after action
             done (bool): True if terminal state
         """
-        self.memory.add(state, action, reward, next_state, done)
+        self.memory.add(state, action, reward, next_state, done, self.p_max)
 
         # Learn as soon as we have enough stored experiences
         self.t_step = (self.t_step + 1) % UPDATE_EVERY
@@ -166,7 +176,13 @@ class Agent(object):
 
     def learn(self, experiences):
         """Learn from batch of experiences."""
-        states, actions, rewards, next_states, dones = experiences
+        indices, states, actions, rewards, next_states, dones, priorities = \
+            experiences
+
+        # Calculate importance-sampling weights
+        probs = priorities / self.memory.priority_sum()
+        weights = (BATCH_SIZE * probs)**(-self.beta)
+        weights /= torch.max(weights)
 
         # region Update Critic
         actions_next = self.actor_target(next_states)
@@ -175,7 +191,15 @@ class Agent(object):
         q_targets = rewards + (GAMMA * q_targets_next * (1 - dones))
 
         q_expected = self.critic_local(states, actions)
-        critic_loss = F.mse_loss(q_expected, q_targets)
+
+        # Update priorities
+        td_error = q_targets - q_expected
+        updated_priorities = abs(td_error)
+        self.memory.set_priorities(indices, updated_priorities**PRIORITY_ALPHA)
+        self.p_max = max(self.p_max, torch.max(updated_priorities))
+
+        # critic_loss = F.mse_loss(q_expected, q_targets)
+        critic_loss = torch.mean(weights * td_error**2)
 
         # Minimize loss
         self.critic_optimizer.zero_grad()
@@ -186,7 +210,7 @@ class Agent(object):
 
         # region Update Actor
         actions_pred = self.actor_local(states)
-        actor_loss = -self.critic_local(states, actions_pred).mean()
+        actor_loss = -(weights * self.critic_local(states, actions_pred)).mean()
 
         # Minimize loss
         self.actor_optimizer.zero_grad()

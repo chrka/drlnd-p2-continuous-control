@@ -1,6 +1,7 @@
 # Report
 
-The agent was trained using Deep Deterministic Policy Gradients (DDPG). 
+The agent was trained using Deep Deterministic Policy Gradients (DDPG).
+**Later, Prioritized Experience Replay (PER) was added.**
 The agent collected experiences from 20 instances in parallel and learning
 took place 10 times every 20th time step (following a suggestion from the 
 benchmark in the project description).
@@ -38,7 +39,7 @@ I eventually settled  on the following:
 The agent solved the task in 175 episodes (that is, managed to keep an average
 mean score of the twenty instances of more than +30 for 100 episodes):
 
-![Score per Episode (seed 20413943)](score.png)
+![Score per Episode (seed 20413943)](reference_score.png)
 
 ## Future improvements
 
@@ -53,6 +54,15 @@ I would also like to try out some other algorithms (eg., PPO or A2C)
  on this problem and see if they might work even better. 
  (I briefly tried some variants of Stochastic Policy Search but could not get it to work.)
 
+
+## Prioritized Experience Replay
+
+After adding (Proportional) Prioritized Experience Replay with $\alpha=0.8$ and
+$\beta$ linearly increased from 0 to 1 by 0.005 per episode, the agent 
+finished the task in 153 episodes (using the same seed).  The increase in
+average reward was not as smooth however.
+ 
+![Score per Episode (seed 20413943)](score.png) 
 
 ## Further reading
 - [Original Deep DPG paper](https://arxiv.org/abs/1509.02971)
