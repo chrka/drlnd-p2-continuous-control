@@ -1,7 +1,8 @@
 # Report
 
 The agent was trained using Deep Deterministic Policy Gradients (DDPG).
-**Later, Prioritized Experience Replay (PER) was added.**
+(**Later, Prioritized Experience Replay (PER) was added for much better
+performance.**)
 The agent collected experiences from 20 instances in parallel and learning
 took place 10 times every 20th time step (following a suggestion from the 
 benchmark in the project description).
@@ -57,10 +58,10 @@ I would also like to try out some other algorithms (eg., PPO or A2C)
 
 ## Prioritized Experience Replay
 
-After adding (Proportional) Prioritized Experience Replay with $\alpha=0.8$ and
-$\beta$ linearly increased from 0 to 1 by 0.005 per episode, the agent 
-finished the task in 153 episodes (using the same seed).  The increase in
-average reward was not as smooth however.
+After adding (Proportional) Prioritized Experience Replay with $\alpha=0.8$,
+$\beta$ linearly increased from 0 to 1 by 0.005 per episode, and 
+$epsilon = 0.05$, the agent finished the task in 119 episodes (using the same 
+seed). 
  
 ![Score per Episode (seed 20413943)](score.png) 
 

@@ -44,6 +44,7 @@ class Agent(object):
 
     def __init__(self, state_size, action_size, device,
                  initial_beta=0.0, delta_beta=0.005, # 1.0 in ~200 episodes
+                 epsilon=0.05,
                  actor_args={}, critic_args={}):
         """Initializes the DQN agent.
 
@@ -66,6 +67,7 @@ class Agent(object):
         self.initial_beta = initial_beta
         self.delta_beta = delta_beta
         self.beta = initial_beta
+        self.epsilon = epsilon
 
         self.t_step = 0
         """Timestep between training updates"""
@@ -194,7 +196,7 @@ class Agent(object):
 
         # Update priorities
         td_error = q_targets - q_expected
-        updated_priorities = abs(td_error)
+        updated_priorities = abs(td_error) + self.epsilon
         self.memory.set_priorities(indices, updated_priorities**PRIORITY_ALPHA)
         self.p_max = max(self.p_max, torch.max(updated_priorities))
 
